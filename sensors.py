@@ -222,7 +222,7 @@ def turnOnHumidifier():
 def turnOffHumidifier():
 	print "TurnOffHumidifier"
 
-def turnOnIlluminator):
+def turnOnIlluminator():
 	print "TurnOnIlluminator"
 
 def turnOffHumidifier():
