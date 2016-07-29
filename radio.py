@@ -25,3 +25,9 @@ def getRadioMsg():
 	receivedMessage = []
 	radio.read(receivedMessage,radio.getDynamicPayloadSize())
 	return receivedMessage
+
+def sendRadioMsg(addr, msg):
+	radio.openWritingPipe(addr)
+	if not (radio.write(msg)):
+		print 'Error'
+	

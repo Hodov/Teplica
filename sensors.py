@@ -4,10 +4,14 @@ import re
 from struct import *
 import settings
 import grafana
+import radio
 
 lastHour = 0;
 
 storage = {}
+
+turnOn = 1
+turnOff = 0
 
 thresholdFile = 'threshold.csv'
 
@@ -132,30 +136,30 @@ def checkControllerRelay(controller):
 def checkHeater(controller):
 	checkValueCrossingThreshold(controller, cAirTemperature, cHeater)
 	if needTurnOnHeater(controller, cHeater):
-		turnOnHeater()
+		turnOnHeater(controller)
 	if needTurnOffHeater(controller, cHeater):
-		turnOffHeater()
+		turnOffHeater(controller)
 
 def checkCooler(controller):
 	checkValueCrossingThreshold(controller, cAirTemperature, cCooler)
 	if needTurnOnCooler(controller, cCooler):
-		turnOnCooler()
+		turnOnCooler(controller)
 	if needTurnOffCooler(controller, cCooler):
-		turnOffCooler()
+		turnOffCooler(controller)
 	
 def checkHumidifier(controller):
 	checkValueCrossingThreshold(controller, cAirHumidity, cHumidifier)
 	if needTurnOnHumidifier(controller, cHumidifier):
-		turnOnHumidifier()
+		turnOnHumidifier(controller)
 	if needTurnOffHumidifier(controller, cHumidifier):
-		turnOffHumidifier()
+		turnOffHumidifier(controller)
 
 def checkIlluminator(controller):
 	checkValueCrossingThreshold(controller, cLDR, cIlluminator)
 	if needTurnOnIlluminator(controller, cIlluminator):
-		turnOnIlluminator()
+		turnOnIlluminator(controller)
 	if needTurnOffIlluminator(controller, cIlluminator):
-		turnOffIlluminator()
+		turnOffIlluminator(controller)
 
 def checkValueCrossingThreshold(controller, sensor, relay):
 	if storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
@@ -222,26 +226,47 @@ def needTurnOnIlluminator(controller, relay):
 	else:
 		return False
 
-def turnOnHeater():
+def makeMsgForActionController(controller, relay, action):
+	relayNum = {
+		cHeater : 6,
+		cCooler : 9,
+		cHumidifier : 7,
+		cIlluminator : 10
+	}
+	print controller
+	print relayNum[relay]
+	print action
+	print pack('hhh',controller, relayNum[relay], action)
+	return pack('hhh',controller, relayNum[relay], action)
+
+def turnOnHeater(controller):
 	print "TurnOnHeater"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHeater, turnOn))
 
-def turnOffHeater():
+def turnOffHeater(controller):
 	print "TurnOffHeater"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHeater, turnOff))
 
-def turnOnCooler():
+def turnOnCooler(controller):
 	print "TurnOnCooler"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cCooler, turnOn))
 
-def turnOffCooler():
+def turnOffCooler(controller):
 	print "TurnOffCooler"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cCooler, turnOff))
 
-def turnOnHumidifier():
+def turnOnHumidifier(controller):
 	print "TurnOnHumidifier"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHumidifier, turnOn))
 
-def turnOffHumidifier():
+def turnOffHumidifier(controller):
 	print "TurnOffHumidifier"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHumidifier, turnOff))
 
-def turnOnIlluminator():
+def turnOnIlluminator(controller):
 	print "TurnOnIlluminator"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cIlluminator, turnOn))
 
-def turnOffIlluminator():
+def turnOffIlluminator(controller):
 	print "TurnOffIlluminator"
+	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cIlluminator, turnOff))
