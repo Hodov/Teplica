@@ -1,6 +1,21 @@
 import json
 
-def getControllers():
+def getSettingsData():
 	json_data = open('settings.json').read()
 	data = json.loads(json_data)
-	return data['controllers']
+	return data
+
+def getControllers():
+	return getSettingsData()['controllers']
+
+def getName():
+	return getSettingsData()['name']	
+
+def getGraphiteURL():
+	return getSettingsData()['graphiteURL']
+
+def getGraphitePort():
+	return getSettingsData()['graphitePort']	
+
+def getPipe():
+	return getSettingsData()['radioPipe']	

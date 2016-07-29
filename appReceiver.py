@@ -1,9 +1,7 @@
 from threading import Thread
-import radio
+import init
 import sensors
-
-pipes = [[0xE8,0XE8,0xF0,0xF0,0xE1],[0xF0,0xF0,0xF0,0xF0,0xE1]]
-
+import radio
 
 def listenRadio():
 	i = 0;
@@ -12,8 +10,7 @@ def listenRadio():
 		sensors.saveData(radio.getRadioMsg())
 
 if __name__ == "__main__":
-	radio.initRadio(pipes[1])
-	sensors.initStorage()
+	init.initAll()
 	th1 = Thread(name = 'th1', target = listenRadio())
 	th2 = Thread(name = 'th2', target = sensors.checkAllRelays())
 

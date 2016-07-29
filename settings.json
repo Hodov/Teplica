@@ -1,3 +1,6 @@
 {
-	"controllers" : [10000]
+	"name" : "HomeOffice",
+	"controllers" : [10000],
+	"graphiteURL" : "95.213.252.56",
+	"graphitePort" : 2003
 }
