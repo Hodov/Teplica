@@ -13,7 +13,7 @@ def listenRadio():
 
 if __name__ == "__main__":
 	radio.initRadio(pipes[1])
-	sensors.initSensors()
+	sensors.initStorage()
 	th1 = Thread(name = 'th1', target = listenRadio())
 	th2 = Thread(name = 'th2', target = sensors.checkAllRelays())
 

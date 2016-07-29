@@ -2,6 +2,9 @@ import csv
 import time
 import re
 from struct import *
+import settings
+
+lastHour = 0;
 
 storage = {}
 
@@ -28,22 +31,30 @@ cUpperBoundCounter = 'cUpperBoundCounter'
 cunningCounterMaxValue = 4
 sleepPeriod = 5
 
-def initSensors():
-	initThresholds(thresholdFile)
+def getFileName(controller):
+	return str(controller) + '_' + time.strftime("%W") + ".csv"
 
-def initThresholds(filename):
+def updateControllerThresholds():
+	global lastHour
+	if (time.localtime().tm_hour != lastHour):
+		lastHour = time.localtime().tm_hour
+		for each in storage:
+			try:
+				updateThresholds(each, getFileName(each))
+			except IOError:
+				print "Error open file"
+		
+
+def updateThresholds(controller, filename):
+	curHourInTable = time.localtime().tm_hour + 2
 	with open (filename, 'rb') as csvfile:
 		fileReader = csv.reader(csvfile)
 		for row in fileReader:
 			m = re.split(r';',row[0])
-			controller = int(m[1])
-			relay = m[2]
-			lowerValue = int(m[3])
-			upperValue = int(m[4])
-			if not (controller in storage):
-				initSensorCell(controller)
-			if (time.strftime("%d.%m.%Y") == m[0]):
-				saveThreshold(controller, relay, lowerValue, upperValue)
+			relay = m[0]
+			lowerValue = int(m[curHourInTable]) - int(m[1])
+			upperValue = int(m[curHourInTable]) + int(m[1])
+			saveThreshold(controller, relay, lowerValue, upperValue)
 
 def saveThreshold(controller, relay, lowerValue, upperValue):
 	storage[controller]['relays'][relay][cUpperBoundThreshold] = upperValue
@@ -72,6 +83,10 @@ def initSensorCell(controller):
 		storage[controller]['relays'][each]['mode'] = 'auto'
 		storage[controller]['relays'][each]['cunningCounter'] = { cLowerBoundCounter : 0, cUpperBoundCounter : 0 }
 
+def initStorage():
+	for each in settings.getControllers():
+		initSensorCell(each)
+
 
 def getSensorName(number):
 	switcher = {
@@ -97,6 +112,7 @@ def saveData(receivedMessage):
 
 
 def checkAllRelays():
+	updateControllerThresholds()
 	i = 0
 	while i<5:
 		i+=1
