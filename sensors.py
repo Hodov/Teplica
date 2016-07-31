@@ -47,7 +47,8 @@ def updateControllerThresholds():
 			try:
 				updateThresholds(each, getFileName(each))
 			except IOError:
-				print "Error open file"
+				print "There is no config file {}".format(getFileName(each))
+				quit()
 		
 
 def updateThresholds(controller, filename):
@@ -66,7 +67,9 @@ def saveThreshold(controller, relay, lowerValue, upperValue):
 	storage[controller]['relays'][relay][cLowerBoundThreshold] = lowerValue
 
 def initSensorCell(controller):
+	addr = radio.getPipeFromString(settings.getAddr(controller))
 	storage[controller] = { 
+		'actionAddress' : addr,
 		'sensors' : 
 		{ 
 			cAirTemperature : {}, 
@@ -105,9 +108,7 @@ def getSensorName(number):
 
 
 def saveData(receivedMessage):
-	string = ""
-	for n in receivedMessage:
-		string += chr(n)
+	string = byteArrayToStr(receivedMessage)
 	controller = unpack('hhh', string)[0]
 	sensorName = getSensorName(unpack('hhh', string)[1])
 	value = unpack('hhh', string)[2]
@@ -116,6 +117,11 @@ def saveData(receivedMessage):
 	storage[controller]['sensors'][sensorName]['value'] = value
 	grafana.sendSensor(controller, sensorName, value)
 
+def byteArrayToStr(receivedMessage):
+	string = ""
+	for n in receivedMessage:
+		string += chr(n)
+	return string
 
 def checkAllRelays():
 	updateControllerThresholds()
@@ -155,28 +161,30 @@ def checkHumidifier(controller):
 		turnOffHumidifier(controller)
 
 def checkIlluminator(controller):
-	checkValueCrossingThreshold(controller, cLDR, cIlluminator)
+	checkValueCrossingThreshold(controller, cLight, cIlluminator)
 	if needTurnOnIlluminator(controller, cIlluminator):
 		turnOnIlluminator(controller)
 	if needTurnOffIlluminator(controller, cIlluminator):
 		turnOffIlluminator(controller)
 
 def checkValueCrossingThreshold(controller, sensor, relay):
-	if storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
-		if storage[controller]['sensors'][sensor]['oldValue'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
-			storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] += 1
-			storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 0
-		else:
-			storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 1
-			storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 0
-	if storage[controller]['sensors'][sensor]['value'] < storage[controller]['relays'][relay][cLowerBoundThreshold]:
-		if storage[controller]['sensors'][sensor]['oldValue'] < storage[controller]['relays'][relay][cLowerBoundThreshold]:
-			storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] += 1
-			storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
-		else:
-			storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 1
-			storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
-
+	if 'value' in storage[controller]['sensors'][sensor]:
+		if storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
+			if storage[controller]['sensors'][sensor]['oldValue'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
+				storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] += 1
+				storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 0
+			else:
+				storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 1
+				storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 0
+		if storage[controller]['sensors'][sensor]['value'] < storage[controller]['relays'][relay][cLowerBoundThreshold]:
+			if storage[controller]['sensors'][sensor]['oldValue'] < storage[controller]['relays'][relay][cLowerBoundThreshold]:
+				storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] += 1
+				storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
+			else:
+				storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 1
+				storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
+	else:
+		print 'There is no value of {}'.format(sensor)
 
 def needTurnOffHeater(controller, relay):
 	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
@@ -233,40 +241,37 @@ def makeMsgForActionController(controller, relay, action):
 		cHumidifier : 7,
 		cIlluminator : 10
 	}
-	print controller
-	print relayNum[relay]
-	print action
-	print pack('hhh',controller, relayNum[relay], action)
+	grafana.sendSensor(controller,relay,action)
 	return pack('hhh',controller, relayNum[relay], action)
 
 def turnOnHeater(controller):
 	print "TurnOnHeater"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHeater, turnOn))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHeater, turnOn))
 
 def turnOffHeater(controller):
 	print "TurnOffHeater"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHeater, turnOff))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHeater, turnOff))
 
 def turnOnCooler(controller):
 	print "TurnOnCooler"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cCooler, turnOn))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cCooler, turnOn))
 
 def turnOffCooler(controller):
 	print "TurnOffCooler"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cCooler, turnOff))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cCooler, turnOff))
 
 def turnOnHumidifier(controller):
 	print "TurnOnHumidifier"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHumidifier, turnOn))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHumidifier, turnOn))
 
 def turnOffHumidifier(controller):
 	print "TurnOffHumidifier"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cHumidifier, turnOff))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHumidifier, turnOff))
 
 def turnOnIlluminator(controller):
 	print "TurnOnIlluminator"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cIlluminator, turnOn))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cIlluminator, turnOn))
 
 def turnOffIlluminator(controller):
 	print "TurnOffIlluminator"
-	radio.sendRadioMsg(controller,makeMsgForActionController(controller, cIlluminator, turnOff))
+	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cIlluminator, turnOff))

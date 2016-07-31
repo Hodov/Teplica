@@ -6,6 +6,6 @@ import grafana
 pipes = [[0xE8,0XE8,0xF0,0xF0,0xE1],[0xF0,0xF0,0xF0,0xF0,0xE1]]
 
 def initAll():
-	radio.initRadio(pipes[1])
+	radio.initRadio(radio.getPipeFromString(settings.getAddr('main')))
 	sensors.initStorage()
 	grafana.init()

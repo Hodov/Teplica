@@ -24,10 +24,16 @@ def getRadioMsg():
 			time.sleep(1/100)
 	receivedMessage = []
 	radio.read(receivedMessage,radio.getDynamicPayloadSize())
+	print receivedMessage
 	return receivedMessage
 
 def sendRadioMsg(addr, msg):
+	print addr
 	radio.openWritingPipe(addr)
+	radio.stopListening()
 	if not (radio.write(msg)):
 		print 'Error'
+	radio.startListening()
 	
+def getPipeFromString(stringPipe):
+	return map(ord, stringPipe.decode("hex"))

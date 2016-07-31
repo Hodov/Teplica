@@ -19,3 +19,6 @@ def getGraphitePort():
 
 def getPipe():
 	return getSettingsData()['radioPipe']	
+
+def getAddr(controller):
+	return getSettingsData()[str(controller)]
