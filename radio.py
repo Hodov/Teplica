@@ -2,8 +2,10 @@ import spidev
 from lib_nrf24 import NRF24
 import RPi.GPIO as GPIO
 import time
+import sensors
 
 radio = NRF24(GPIO,spidev.SpiDev())
+do_Radio = True
 
 def initRadio(radioAddress):
 	GPIO.setmode(GPIO.BCM)
@@ -37,3 +39,9 @@ def sendRadioMsg(addr, msg):
 	
 def getPipeFromString(stringPipe):
 	return map(ord, stringPipe.decode("hex"))
+
+def listenRadio():
+	print 'Begin listening radio'
+	while do_Radio:
+		sensors.saveData(getRadioMsg())
+	print 'End listening radio'

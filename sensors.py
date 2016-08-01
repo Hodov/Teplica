@@ -6,6 +6,8 @@ import settings
 import grafana
 import radio
 
+do_checkSensor = True
+
 lastHour = 0;
 
 storage = {}
@@ -33,8 +35,12 @@ cUpperBoundThreshold = 'upperBoundThreshold'
 cLowerBoundCounter = 'cLowerBoundCounter'
 cUpperBoundCounter = 'cUpperBoundCounter'
 
+auto = 'auto'
+on = 'on'
+off = 'off'
+
 cunningCounterMaxValue = 4
-sleepPeriod = 5
+sleepPeriod = 10
 
 def getFileName(controller):
 	return str(controller) + '_' + time.strftime("%W") + ".csv"
@@ -88,13 +94,12 @@ def initSensorCell(controller):
 		} 
 	}
 	for each in storage[controller]['relays']:
-		storage[controller]['relays'][each]['mode'] = 'auto'
+		storage[controller]['relays'][each]['mode'] = auto
 		storage[controller]['relays'][each]['cunningCounter'] = { cLowerBoundCounter : 0, cUpperBoundCounter : 0 }
 
 def initStorage():
 	for each in settings.getControllers():
 		initSensorCell(each)
-
 
 def getSensorName(number):
 	switcher = {
@@ -105,6 +110,9 @@ def getSensorName(number):
 		5 : cLDR
 	}
 	return switcher[number]
+
+def setRelayMode(controller, relay, command):
+	storage[controller]['relays'][relay]['mode'] = command
 
 
 def saveData(receivedMessage):
@@ -124,20 +132,37 @@ def byteArrayToStr(receivedMessage):
 	return string
 
 def checkAllRelays():
+	print 'Begin check all relays'
 	updateControllerThresholds()
-	i = 0
-	while i<5:
-		i+=1
+	while do_checkSensor:
+		time.sleep(sleepPeriod)
 		for controller in storage:
 			checkControllerRelay(controller)
-		time.sleep(sleepPeriod)
+	print 'End check all relays'
+
+def autoMode(controller, relay):
+	if storage[controller]['relays'][relay]['mode'] == auto:
+		return True
+	else:
+		return False
+
+def relaySwitchOn(controller, relay):
+	if storage[controller]['relays'][relay]['mode'] == on:
+		return True
+	else:
+		return False
+
+def relaySwitchOff(controller, relay):
+	if storage[controller]['relays'][relay]['mode'] == off:
+		return True
+	else:
+		return False
 
 def checkControllerRelay(controller):
 	checkHeater(controller)
 	checkCooler(controller)
 	checkHumidifier(controller)
 	checkIlluminator(controller)
-
 
 def checkHeater(controller):
 	checkValueCrossingThreshold(controller, cAirTemperature, cHeater)
@@ -186,50 +211,98 @@ def checkValueCrossingThreshold(controller, sensor, relay):
 	else:
 		print 'There is no value of {}'.format(sensor)
 
-def needTurnOffHeater(controller, relay):
+def needAutoTurnOffHeater(controller, relay):
 	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOnHeater(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOnCooler(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOffCooler(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOffHumidifier(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOnHumidifier(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOffIlluminator(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needAutoTurnOnIlluminator(controller, relay):
+	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+		return True
+	else:
+		return False
+
+def needTurnOffHeater(controller, relay):
+	if (needAutoTurnOffHeater(controller, relay) and autoMode(controller,relay)) or relaySwitchOff(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOnHeater(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOnHeater(controller, relay) and autoMode(controller,relay)) or relaySwitchOn(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOnCooler(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOnCooler(controller, relay) and autoMode(controller,relay)) or relaySwitchOn(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOffCooler(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOffCooler(controller, relay) and autoMode(controller,relay)) or relaySwitchOff(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOffHumidifier(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOffHumidifier(controller, relay) and autoMode(controller,relay)) or relaySwitchOff(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOnHumidifier(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOnHumidifier(controller, relay) and autoMode(controller,relay)) or relaySwitchOn(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOffIlluminator(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOffIlluminator(controller, relay) and autoMode(controller,relay)) or relaySwitchOff(controller, relay):
 		return True
 	else:
 		return False
 
 def needTurnOnIlluminator(controller, relay):
-	if storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] > cunningCounterMaxValue:
+	if (needAutoTurnOnIlluminator(controller, relay) and autoMode(controller,relay)) or relaySwitchOn(controller, relay):
 		return True
 	else:
 		return False

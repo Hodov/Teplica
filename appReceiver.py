@@ -1,21 +1,18 @@
-from threading import Thread
-import init
-import sensors
-import radio
 import httpReceiver
-
-def listenRadio():
-	print 'Begin listening radio'
-	i = 0;
-	while i<50:
-		i+=1
-		sensors.saveData(radio.getRadioMsg())
-	print 'End listening radio'
+import init
+import radio
+import sensors
+from threading import Thread
 
 if __name__ == "__main__":
 	init.initAll()
-	th1 = Thread(name = 'th1', target = listenRadio())
-	th2 = Thread(name = 'th2', target = sensors.checkAllRelays())
-	
-
-
+	th1 = Thread(name = 'th1', target = radio.listenRadio)
+	th2 = Thread(name = 'th2', target = sensors.checkAllRelays)
+	th3 = Thread(name = 'th3', target = httpReceiver.runFlaskServer)
+	th1.start()
+	th2.start()
+	th3.start()
+	th1.join()
+	th2.join()
+	th3.join()
+	print 'Exit main thread'

@@ -17,8 +17,5 @@ def getGraphiteURL():
 def getGraphitePort():
 	return getSettingsData()['graphitePort']	
 
-def getPipe():
-	return getSettingsData()['radioPipe']	
-
 def getAddr(controller):
-	return getSettingsData()[str(controller)]
+	return getSettingsData()['pipes'][str(controller)]
