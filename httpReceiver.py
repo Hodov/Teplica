@@ -1,13 +1,13 @@
 import os
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from slackclient import SlackClient
 import remote
+import sensors
 
 
 app = Flask(__name__)
 
 SLACK_WEBHOOK_SECRET = os.environ.get('SLACK_WEBHOOK_SECRET')
-
 
 @app.route('/slack', methods=['POST'])
 def inbound():
@@ -22,12 +22,18 @@ def inbound():
 		remote.parseRemoteCommand(text)
 	return Response("Got it: " + text), 200
 
-
-
 @app.route('/', methods=['GET'])
 def test():
 	return Response('It works!')
 
+@app.route('/storage', methods=['GET'])
+def returnStorage():
+	return jsonify(sensors.storage)
+
+@app.route('/shutdown', methods=['GET'])
+def shutdown():
+	remote.parseOffCommand()
+	return Response('Shutdown')
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')

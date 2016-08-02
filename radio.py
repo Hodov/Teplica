@@ -23,7 +23,7 @@ def initRadio(radioAddress):
 
 def getRadioMsg():
 	while not radio.available(0):
-			time.sleep(1/100)
+			time.sleep(1/10)
 	receivedMessage = []
 	radio.read(receivedMessage,radio.getDynamicPayloadSize())
 	print receivedMessage
