@@ -95,7 +95,9 @@ def initSensorCell(controller):
 	}
 	for each in storage[controller]['relays']:
 		storage[controller]['relays'][each]['mode'] = auto
+		storage[controller]['relays'][each]['switcher'] = None
 		storage[controller]['relays'][each]['cunningCounter'] = { cLowerBoundCounter : 0, cUpperBoundCounter : 0 }
+
 
 def initStorage():
 	for each in settings.getControllers():
@@ -139,6 +141,9 @@ def checkAllRelays():
 		for controller in storage:
 			checkControllerRelay(controller)
 	print 'End check all relays'
+
+def turnRelaySwitcher(controller,relay, position):
+	storage[controller]['relays'][relay]['switcher'] = position
 
 def autoMode(controller, relay):
 	if storage[controller]['relays'][relay]['mode'] == auto:
@@ -315,6 +320,7 @@ def makeMsgForActionController(controller, relay, action):
 		cIlluminator : 10
 	}
 	grafana.sendSensor(controller,relay,action)
+	turnRelaySwitcher(controller,relay,action)
 	return pack('hhh',controller, relayNum[relay], action)
 
 def turnOnHeater(controller):
