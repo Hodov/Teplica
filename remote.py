@@ -2,6 +2,7 @@ import re
 import sensors
 import radio
 import httpReceiver
+from flask import jsonify
 
 def parseRemoteCommand(command):
 	if re.search(r'\w+;\w+;\w+;',command):
@@ -24,3 +25,6 @@ def parseOffCommand():
 	radio.do_Radio = False
 	sensors.do_checkSensor = False
 	httpReceiver.shutdown_server()
+
+def getStorage():
+	return jsonify(sensors.storage)

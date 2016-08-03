@@ -4,10 +4,18 @@ from slackclient import SlackClient
 import remote
 import sensors
 
-
 app = Flask(__name__)
 
 SLACK_WEBHOOK_SECRET = os.environ.get('SLACK_WEBHOOK_SECRET')
+
+def runFlaskServer():
+	app.run(debug=True, use_reloader = False, host='0.0.0.0')
+
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
 
 @app.route('/slack', methods=['POST'])
 def inbound():
@@ -20,7 +28,7 @@ def inbound():
 		inbound_message = username + " in " + channel + " says: " + text
 		print(inbound_message)
 		remote.parseRemoteCommand(text)
-	return Response("Got it: " + text), 200
+	return jsonify(text = 'Got it: ' + text), 200
 
 @app.route('/', methods=['GET'])
 def test():
@@ -28,21 +36,9 @@ def test():
 
 @app.route('/storage', methods=['GET'])
 def returnStorage():
-	return jsonify(sensors.storage)
+	return remote.getStorage()
 
 @app.route('/shutdown', methods=['GET'])
 def shutdown():
 	remote.parseOffCommand()
 	return Response('Shutdown')
-
-def shutdown_server():
-    func = request.environ.get('werkzeug.server.shutdown')
-    if func is None:
-        raise RuntimeError('Not running with the Werkzeug Server')
-    func()
-
-def runFlaskServer():
-	app.run(debug=True, use_reloader = False, host='0.0.0.0')
-
-#if __name__ == "__main__":
-#app.run(debug=True, use_reloader = False, host='0.0.0.0')

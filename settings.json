@@ -1,4 +1,5 @@
-{
+{	
+	"token" : "123",
 	"name" : "HomeOffice",
 	"controllers" : [20000],
 	"graphiteURL" : "95.213.252.56",
