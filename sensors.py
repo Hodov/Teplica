@@ -111,7 +111,10 @@ def getSensorName(number):
 		4 : cLight,
 		5 : cLDR
 	}
-	return switcher[number]
+	if number in switcher:
+		return switcher[number]
+	else:
+		return None
 
 def setRelayMode(controller, relay, command):
 	storage[controller]['relays'][relay]['mode'] = command
@@ -120,12 +123,14 @@ def setRelayMode(controller, relay, command):
 def saveData(receivedMessage):
 	string = byteArrayToStr(receivedMessage)
 	controller = unpack('hhh', string)[0]
-	sensorName = getSensorName(unpack('hhh', string)[1])
-	value = unpack('hhh', string)[2]
-	if ('value' in storage[controller]['sensors'][sensorName]):
-		storage[controller]['sensors'][sensorName]['oldValue'] = storage[controller]['sensors'][sensorName]['value']
-	storage[controller]['sensors'][sensorName]['value'] = value
-	grafana.sendSensor(controller, sensorName, value)
+	if controller in storage:
+		sensorName = getSensorName(unpack('hhh', string)[1])
+		if not (sensorName is None):
+			value = unpack('hhh', string)[2]
+			if ('value' in storage[controller]['sensors'][sensorName]):
+				storage[controller]['sensors'][sensorName]['oldValue'] = storage[controller]['sensors'][sensorName]['value']
+			storage[controller]['sensors'][sensorName]['value'] = value
+			grafana.sendSensor(controller, sensorName, value)
 
 def byteArrayToStr(receivedMessage):
 	string = ""
@@ -324,33 +329,51 @@ def makeMsgForActionController(controller, relay, action):
 	return pack('hhh',controller, relayNum[relay], action)
 
 def turnOnHeater(controller):
-	print "TurnOnHeater"
+	print str(controller) + ": TurnOnHeater"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHeater, turnOn))
 
 def turnOffHeater(controller):
-	print "TurnOffHeater"
+	print str(controller) + ": TurnOffHeater"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHeater, turnOff))
 
 def turnOnCooler(controller):
-	print "TurnOnCooler"
+	print str(controller) + ": TurnOnCooler"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cCooler, turnOn))
 
 def turnOffCooler(controller):
-	print "TurnOffCooler"
+	print str(controller) + ": TurnOffCooler"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cCooler, turnOff))
 
 def turnOnHumidifier(controller):
-	print "TurnOnHumidifier"
+	print str(controller) + ": TurnOnHumidifier"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHumidifier, turnOn))
 
 def turnOffHumidifier(controller):
-	print "TurnOffHumidifier"
+	print str(controller) + ": TurnOffHumidifier"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cHumidifier, turnOff))
 
 def turnOnIlluminator(controller):
-	print "TurnOnIlluminator"
+	print str(controller) + ": TurnOnIlluminator"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cIlluminator, turnOn))
 
 def turnOffIlluminator(controller):
-	print "TurnOffIlluminator"
+	print str(controller) + ": TurnOffIlluminator"
 	radio.sendRadioMsg(storage[controller]['actionAddress'],makeMsgForActionController(controller, cIlluminator, turnOff))
+
+def turnOnAll(controller):
+	print str(controller) + ": TurnOnAll"
+	turnOnHeater(controller)
+	turnOnCooler(controller)
+	turnOnHumidifier(controller)
+	turnOnIlluminator(controller)
+
+def turnOffAll(controller):
+	print str(controller) + ": TurnOffAll"
+	turnOffHeater(controller)
+	turnOffCooler(controller)
+	turnOffHumidifier(controller)
+	turnOffIlluminator(controller)
+
+def initAllRelays():
+	for each in storage:
+		turnOffAll(each)

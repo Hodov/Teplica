@@ -9,3 +9,4 @@ def initAll():
 	radio.initRadio(radio.getPipeFromString(settings.getAddr('main')))
 	sensors.initStorage()
 	grafana.init()
+	sensors.initAllRelays()
