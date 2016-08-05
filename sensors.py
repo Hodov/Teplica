@@ -377,3 +377,13 @@ def turnOffAll(controller):
 def initAllRelays():
 	for each in storage:
 		turnOffAll(each)
+
+def checkRelay(controller, relay):
+	if relay == cHeater:
+		checkHeater(controller)
+	if relay == cCooler:
+		checkCooler(controller)
+	if relay == cHumidifier:
+		checkHumidifier(controller)
+	if relay == cIlluminator:
+		checkIlluminator(controller)

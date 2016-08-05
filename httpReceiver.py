@@ -30,6 +30,13 @@ def inbound():
 		remote.parseRemoteCommand(text)
 	return jsonify(text = 'Got it: ' + text), 200
 
+
+@app.route('/android', methods=['POST'])
+def android():
+	text = ''
+	remote.parseAndroidCommand(request.json) 
+	return jsonify(text = 'Got it: ' + text), 200
+
 @app.route('/', methods=['GET'])
 def test():
 	return Response('It works!')

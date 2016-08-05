@@ -22,9 +22,14 @@ def parseRelayCommand(command):
 		sensors.setRelayMode(controller, relay, action)
 
 def parseOffCommand():
-	radio.do_Radio = False
+	radio.do_Radio = False 
 	sensors.do_checkSensor = False
 	httpReceiver.shutdown_server()
 
 def getStorage():
 	return jsonify(sensors.storage)
+
+def parseAndroidCommand(command):
+	#{u'position': u'auto', u'controller': u'20000', u'relay': u'heater'}
+	sensors.setRelayMode(int(command['controller']), command['relay'], command['position'])
+	sensors.checkRelay(int(command['controller']), command['relay'])
