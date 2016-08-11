@@ -49,3 +49,6 @@ def returnStorage():
 def shutdown():
 	remote.parseOffCommand()
 	return Response('Shutdown')
+
+if __name__ == '__main__':
+	runFlaskServer()
