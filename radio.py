@@ -6,6 +6,7 @@ import sensors
 
 radio = NRF24(GPIO, spidev.SpiDev())
 do_Radio = True
+pause_between_send = 0.5
 
 
 def initRadio(radioAddress):
@@ -38,6 +39,7 @@ def sendRadioMsg(addr, msg):
     radio.stopListening()
     if not (radio.write(msg)):
         print 'Error'
+    time.sleep(pause_between_send)
     radio.startListening()
 
 

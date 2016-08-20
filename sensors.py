@@ -426,13 +426,10 @@ def turnOnAll(controller):
 def turnOffAll(controller):
     print str(controller) + ": TurnOffAll"
     turnOffHeater(controller)
-    time.sleep(0.5)
     turnOffCooler(controller)
-    time.sleep(0.5)
     turnOffHumidifier(controller)
-    time.sleep(0.5)
     turnOffIlluminator(controller)
-    time.sleep(0.5)
+
 
 
 def initAllRelays():
