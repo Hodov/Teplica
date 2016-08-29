@@ -10,6 +10,7 @@ graphiteName = ''
 def init():
     global graphiteURL
     global graphitePort
+    graphiteURL = settings.getGraphiteURL()
     graphitePort = settings.getGraphitePort()
     global graphiteName
     graphiteName = settings.getName()
@@ -18,9 +19,9 @@ def init():
 def sendSensor(controller, sensor, value):
     try:
         conn = socket.create_connection((graphiteURL, graphitePort))
-        timeString = str(int(time.time()))
-        sendString = graphiteName + "." + str(controller) + "." + sensor + " " + str(value) + " " + timeString + "\n"
-        conn.send(sendString)
+        time_string = str(int(time.time()))
+        send_string = graphiteName + "." + str(controller) + "." + sensor + " " + str(value) + " " + time_string + "\n"
+        conn.send(send_string)
         conn.close()
     except socket.error:
         print("Socket error")
