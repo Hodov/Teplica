@@ -38,13 +38,14 @@ cUpperBoundCounter = 'cUpperBoundCounter'
 auto = 'auto'
 on = 'on'
 off = 'off'
+fileFolder = 'configs/'
 
 cunningCounterMaxValue = 4
 sleepPeriod = 10
 
 
 def getFileName(controller):
-    return str(controller) + '_' + time.strftime("%W") + ".csv"
+    return fileFolder + str(controller) + '_' + time.strftime("%W") + ".csv"
 
 
 def updateControllerThresholds():
