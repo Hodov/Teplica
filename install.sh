@@ -2,15 +2,16 @@
 sudo raspi-config
 sudo apt-get update
 sudo apt-get install python-dev -y
+sudo apt-get install screen -y
 mkdir /home/pi/Documents/greenhouse
 cd /home/pi/Documents/greenhouse
+git clone https://github.com/Hodov/Teplica
 sudo pip install virtualenv
 virtualenv venv
 . venv/bin/activate
 pip install Flask
 pip install slackclient
 pip install Rpi.GPIO
-git clone https://github.com/Hodov/Teplica
 mv Teplica/* .
 git clone https://github.com/Hodov/py-spidev
 cd /home/pi/Documents/greenhouse/py-spidev
