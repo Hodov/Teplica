@@ -8,7 +8,7 @@ import radio
 
 do_checkSensor = True
 
-lastHour = 0;
+lastHour = 0
 
 storage = {}
 
@@ -38,13 +38,14 @@ cUpperBoundCounter = 'cUpperBoundCounter'
 auto = 'auto'
 on = 'on'
 off = 'off'
+fileFolder = 'configs/'
 
 cunningCounterMaxValue = 4
 sleepPeriod = 10
 
 
 def getFileName(controller):
-    return str(controller) + '_' + time.strftime("%W") + ".csv"
+    return fileFolder + str(controller) + '_' + time.strftime("%W") + ".csv"
 
 
 def updateControllerThresholds():
