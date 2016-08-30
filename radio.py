@@ -6,12 +6,13 @@ import sensors
 
 radio = NRF24(GPIO, spidev.SpiDev())
 do_Radio = True
-pause_between_send = 0.5
+pause_between_send = 0.1
 
 
 def initRadio(radioAddress):
     GPIO.setmode(GPIO.BCM)
     radio.begin(0, 17)
+    radio.setRetries(15, 15)
     radio.setPayloadSize(32)
     radio.setChannel(0x76)
     radio.setDataRate(NRF24.BR_1MBPS)
@@ -35,13 +36,11 @@ def getRadioMsg():
 
 def sendRadioMsg(addr, msg):
     #print addr
-    radio.setChannel(0x55)
     radio.openWritingPipe(addr)
     radio.stopListening()
     if not (radio.write(msg)):
         print 'Error send message'
     time.sleep(pause_between_send)
-    radio.setChannel(0x76)
     radio.startListening()
 
 
