@@ -34,12 +34,14 @@ def getRadioMsg():
 
 
 def sendRadioMsg(addr, msg):
-    print addr
+    #print addr
+    radio.setChannel(0x55)
     radio.openWritingPipe(addr)
     radio.stopListening()
     if not (radio.write(msg)):
-        print 'Error'
+        print 'Error send message'
     time.sleep(pause_between_send)
+    radio.setChannel(0x76)
     radio.startListening()
 
 
