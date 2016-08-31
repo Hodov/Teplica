@@ -29,3 +29,7 @@ def getAddr(controller):
 
 def getNameController(controller):
     return getSettingsData()['controllers'][str(controller)]['name']
+
+
+def get_pipe():
+    return getSettingsData()['pipe']
