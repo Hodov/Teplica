@@ -8,12 +8,12 @@
 		"10000" : {
 			"name" : "North controller",
 			"pipe" : "F010270000",
-			"status" : "non active",
+			"status" : "non active"
 		},
 		"20000" : {
 			"name" : "South controller",
 			"pipe" : "E8E8F0F0E1",
-			"status" : "active",
+			"status" : "active"
 		}
 	}
 }

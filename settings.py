@@ -9,7 +9,9 @@ def getSettingsData():
 
 def getControllers():
     #return getSettingsData()['controllers']
-    return getSettingsData()['controllers'].keys()
+    keys = getSettingsData()['controllers'].keys()
+    new_keys = [int(i) for i in keys]
+    return new_keys
 
 
 def getName():
@@ -26,6 +28,7 @@ def getGraphitePort():
 
 def getAddr(controller):
     return getSettingsData()['controllers'][str(controller)]['pipe']
+
 
 def getNameController(controller):
     return getSettingsData()['controllers'][str(controller)]['name']
