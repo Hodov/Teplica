@@ -8,9 +8,7 @@ def getSettingsData():
 
 
 def getControllers():
-    #данные пришли как string
     keys = getSettingsData()['controllers'].keys()
-    #а нам нужны int
     new_keys = [int(i) for i in keys]
     return new_keys
 
