@@ -1,12 +1,18 @@
 {	
 	"token" : "123",
 	"name" : "HomeOffice",
-	"controllers" : [20000],
 	"graphiteURL" : "95.213.252.56",
 	"graphitePort" : 2003,
-	"pipes": {
-		"main" : "F0F0F0F0E1",
-		"10000" : "f010270000",
-		"20000" : "E8E8F0F0E1"	
+	"controllers" : {
+		"10000" : {
+			"name" : "North controller",
+			"pipe" : "F010270000",
+			"status" : "non active",
+		},
+		"20000" : {
+			"name" : "South controller",
+			"pipe" : "E8E8F0F0E1",
+			"status" : "active",
+		}
 	}
 }
