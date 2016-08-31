@@ -243,7 +243,7 @@ def checkValueCrossingThreshold(controller, sensor, relay):
                 storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 1
                 storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
     else:
-        print 'There is no value of {}'.format(sensor)
+        print 'Controller {}: There is no value of {}'.format(controller, sensor)
 
 
 def needAutoTurnOffHeater(controller, relay):

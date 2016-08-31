@@ -8,8 +8,9 @@ def getSettingsData():
 
 
 def getControllers():
-    #return getSettingsData()['controllers']
+    #данные пришли как string
     keys = getSettingsData()['controllers'].keys()
+    #а нам нужны int
     new_keys = [int(i) for i in keys]
     return new_keys
 
@@ -36,3 +37,7 @@ def getNameController(controller):
 
 def get_pipe():
     return getSettingsData()['pipe']
+
+
+def get_log_level():
+    return getSettingsData()['log_level']

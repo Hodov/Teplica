@@ -3,6 +3,7 @@ from lib_nrf24 import NRF24
 import RPi.GPIO as GPIO
 import time
 import sensors
+import logging
 
 radio = NRF24(GPIO, spidev.SpiDev())
 do_Radio = True
@@ -30,7 +31,7 @@ def getRadioMsg():
         time.sleep(1 / 10)
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
-    print receivedMessage
+    logging.DEBUG(receivedMessage)
     return receivedMessage
 
 

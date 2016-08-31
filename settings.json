@@ -4,6 +4,7 @@
 	"pipe" : "F0F0F0F0E1",
 	"graphiteURL" : "95.213.252.56",
 	"graphitePort" : 2003,
+	"log_level" : "debug",
 	"controllers" : {
 		"10000" : {
 			"name" : "North controller",
