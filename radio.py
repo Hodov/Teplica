@@ -31,12 +31,11 @@ def getRadioMsg():
         time.sleep(1 / 10)
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
-    logging.DEBUG(receivedMessage)
+    logging.debug(receivedMessage)
     return receivedMessage
 
 
 def sendRadioMsg(addr, msg):
-    #print addr
     radio.openWritingPipe(addr)
     radio.stopListening()
     if not (radio.write(msg)):
