@@ -79,7 +79,7 @@ def saveThreshold(controller, relay, lowerValue, upperValue):
 
 def initSensorCell(controller):
     addr = radio.getPipeFromString(settings.getAddr(controller))
-    name = radio.getPipeFromString(settings.getNameController(controller))
+    name = settings.getNameController(controller)
     storage[controller] = {
         'actionAddress': addr,
         'name': name,
