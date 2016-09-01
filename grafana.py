@@ -1,7 +1,7 @@
 import socket
 import settings
 import time
-import logging
+from log import logger
 
 graphiteURL = ''
 graphitePort = 0
@@ -25,4 +25,4 @@ def sendSensor(controller, sensor, value):
         conn.send(send_string)
         conn.close()
     except socket.error:
-        logging.warning('Grafana send error: socket error')
+        logger.warning('Grafana send error: socket error')

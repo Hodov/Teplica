@@ -5,7 +5,7 @@ from struct import *
 import settings
 import grafana
 import radio
-import logging
+from log import logger
 
 do_checkSensor = True
 
@@ -57,7 +57,7 @@ def updateControllerThresholds():
             try:
                 updateThresholds(each, getFileName(each))
             except IOError:
-                logging.error("There is no config file {}".format(getFileName(each)))
+                logger.error("There is no config file {}".format(getFileName(each)))
                 quit()
 
 
@@ -140,7 +140,7 @@ def saveData(receivedMessage):
             if ('value' in storage[controller]['sensors'][sensorName]):
                 storage[controller]['sensors'][sensorName]['oldValue'] = storage[controller]['sensors'][sensorName][
                     'value']
-                logging.info('{}-{}-{}.(controller, sensorName, value')
+                logger.info('{}-{}-{}'.format(controller, sensorName, value))
             storage[controller]['sensors'][sensorName]['value'] = value
             grafana.sendSensor(controller, sensorName, value)
 
@@ -153,13 +153,13 @@ def byteArrayToStr(receivedMessage):
 
 
 def checkAllRelays():
-    logging.info('Begin check all relays')
+    logger.info('Begin check all relays')
     updateControllerThresholds()
     while do_checkSensor:
         time.sleep(sleepPeriod)
         for controller in storage:
             checkControllerRelay(controller)
-    logging.info('End check all relays')
+    logger.info('End check all relays')
 
 
 def turnRelaySwitcher(controller, relay, position):
@@ -245,7 +245,7 @@ def checkValueCrossingThreshold(controller, sensor, relay):
                 storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 1
                 storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
     else:
-        logging.warning('Check value of sensor {}: There is no value of {}'.format(controller, sensor))
+        logger.warning('Check value of sensor {}: There is no value of {}'.format(controller, sensor))
 
 
 def needAutoTurnOffHeater(controller, relay):
@@ -377,51 +377,51 @@ def makeMsgForActionController(controller, relay, action):
 
 
 def turnOnHeater(controller):
-    logging.info(str(controller) + ": TurnOnHeater")
+    logger.info(str(controller) + ": TurnOnHeater")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cHeater, turnOn))
 
 
 def turnOffHeater(controller):
-    logging.info(str(controller) + ": TurnOffHeater")
+    logger.info(str(controller) + ": TurnOffHeater")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cHeater, turnOff))
 
 
 def turnOnCooler(controller):
-    logging.info(str(controller) + ": TurnOnCooler")
+    logger.info(str(controller) + ": TurnOnCooler")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cCooler, turnOn))
 
 
 def turnOffCooler(controller):
-    logging.info(str(controller) + ": TurnOffCooler")
+    logger.info(str(controller) + ": TurnOffCooler")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cCooler, turnOff))
 
 
 def turnOnHumidifier(controller):
-    logging.info(str(controller) + ": TurnOnHumidifier")
+    logger.info(str(controller) + ": TurnOnHumidifier")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cHumidifier, turnOn))
 
 
 def turnOffHumidifier(controller):
-    logging.info(str(controller) + ": TurnOffHumidifier")
+    logger.info(str(controller) + ": TurnOffHumidifier")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cHumidifier, turnOff))
 
 
 def turnOnIlluminator(controller):
-    logging.info(str(controller) + ": TurnOnIlluminator")
+    logger.info(str(controller) + ": TurnOnIlluminator")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cIlluminator, turnOn))
 
 
 def turnOffIlluminator(controller):
-    logging.info(str(controller) + ": TurnOffIlluminator")
+    logger.info(str(controller) + ": TurnOffIlluminator")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cIlluminator, turnOff))
 
 
 def turnOnAll(controller):
-    logging.info(str(controller) + ": TurnOnAll")
+    logger.info(str(controller) + ": TurnOnAll")
     turnOnHeater(controller)
     turnOnCooler(controller)
     turnOnHumidifier(controller)
@@ -429,7 +429,7 @@ def turnOnAll(controller):
 
 
 def turnOffAll(controller):
-    logging.info(str(controller) + ": TurnOffAll")
+    logger.info(str(controller) + ": TurnOffAll")
     turnOffHeater(controller)
     turnOffCooler(controller)
     turnOffHumidifier(controller)

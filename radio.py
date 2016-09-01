@@ -3,7 +3,8 @@ from lib_nrf24 import NRF24
 import RPi.GPIO as GPIO
 import time
 import sensors
-import logging
+from log import logger
+from struct import *
 
 radio = NRF24(GPIO, spidev.SpiDev())
 do_Radio = True
@@ -31,7 +32,7 @@ def getRadioMsg():
         time.sleep(1 / 10)
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
-    logging.debug(receivedMessage)
+    logger.debug(receivedMessage)
     return receivedMessage
 
 
@@ -39,7 +40,8 @@ def sendRadioMsg(addr, msg):
     radio.openWritingPipe(addr)
     radio.stopListening()
     if not (radio.write(msg)):
-        logging.warning('Error send message: {}'.format(msg) )
+        str =  unpack('hhh', msg)
+        logger.warning('Error send message: {}'.format(str))
     time.sleep(pause_between_send)
     radio.startListening()
 
@@ -49,7 +51,7 @@ def getPipeFromString(stringPipe):
 
 
 def listenRadio():
-    logging.info('Begin listening radio')
+    logger.info('Begin listening radio')
     while do_Radio:
         sensors.saveData(getRadioMsg())
-    logging.info('End listening radio')
+    logger.info('End listening radio')

@@ -1,5 +1,5 @@
 import json
-import logging
+from log import logger
 
 
 def getSettingsData():
@@ -36,7 +36,7 @@ def getNameController(controller):
 
 def get_pipe():
     pipe = getSettingsData()['pipe']
-    logging.debug('Pipe of main controller: ' + pipe)
+    logger.debug('Pipe of main controller: ' + pipe)
     return pipe
 
 
