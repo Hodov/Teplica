@@ -140,6 +140,7 @@ def saveData(receivedMessage):
             if ('value' in storage[controller]['sensors'][sensorName]):
                 storage[controller]['sensors'][sensorName]['oldValue'] = storage[controller]['sensors'][sensorName][
                     'value']
+                logging.info('{}-{}-{}.(controller, sensorName, value')
             storage[controller]['sensors'][sensorName]['value'] = value
             grafana.sendSensor(controller, sensorName, value)
 
