@@ -20,6 +20,6 @@ if __name__ == "__main__":
         th2.join()
         th3.join()
         logger.info('Exit main thread')
-    except Exception:
-        logger.exception()
+    except Exception as e:
+        logger.exception(e)
         sys.exit(0)
