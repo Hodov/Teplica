@@ -5,6 +5,7 @@ from struct import *
 import settings
 import grafana
 import radio
+import logging
 
 do_checkSensor = True
 
@@ -56,7 +57,7 @@ def updateControllerThresholds():
             try:
                 updateThresholds(each, getFileName(each))
             except IOError:
-                print "There is no config file {}".format(getFileName(each))
+                logging.error("There is no config file {}".format(getFileName(each)))
                 quit()
 
 
@@ -151,13 +152,13 @@ def byteArrayToStr(receivedMessage):
 
 
 def checkAllRelays():
-    print 'Begin check all relays'
+    logging.info('Begin check all relays')
     updateControllerThresholds()
     while do_checkSensor:
         time.sleep(sleepPeriod)
         for controller in storage:
             checkControllerRelay(controller)
-    print 'End check all relays'
+    logging.info('End check all relays')
 
 
 def turnRelaySwitcher(controller, relay, position):
@@ -243,7 +244,7 @@ def checkValueCrossingThreshold(controller, sensor, relay):
                 storage[controller]['relays'][relay]['cunningCounter'][cLowerBoundCounter] = 1
                 storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
     else:
-        print 'Controller {}: There is no value of {}'.format(controller, sensor)
+        logging.warning('Check value of sensor {}: There is no value of {}'.format(controller, sensor))
 
 
 def needAutoTurnOffHeater(controller, relay):
@@ -375,51 +376,51 @@ def makeMsgForActionController(controller, relay, action):
 
 
 def turnOnHeater(controller):
-    print str(controller) + ": TurnOnHeater"
+    logging.info(str(controller) + ": TurnOnHeater")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cHeater, turnOn))
 
 
 def turnOffHeater(controller):
-    print str(controller) + ": TurnOffHeater"
+    logging.info(str(controller) + ": TurnOffHeater")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cHeater, turnOff))
 
 
 def turnOnCooler(controller):
-    print str(controller) + ": TurnOnCooler"
+    logging.info(str(controller) + ": TurnOnCooler")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cCooler, turnOn))
 
 
 def turnOffCooler(controller):
-    print str(controller) + ": TurnOffCooler"
+    logging.info(str(controller) + ": TurnOffCooler")
     radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cCooler, turnOff))
 
 
 def turnOnHumidifier(controller):
-    print str(controller) + ": TurnOnHumidifier"
+    logging.info(str(controller) + ": TurnOnHumidifier")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cHumidifier, turnOn))
 
 
 def turnOffHumidifier(controller):
-    print str(controller) + ": TurnOffHumidifier"
+    logging.info(str(controller) + ": TurnOffHumidifier")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cHumidifier, turnOff))
 
 
 def turnOnIlluminator(controller):
-    print str(controller) + ": TurnOnIlluminator"
+    logging.info(str(controller) + ": TurnOnIlluminator")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cIlluminator, turnOn))
 
 
 def turnOffIlluminator(controller):
-    print str(controller) + ": TurnOffIlluminator"
+    logging.info(str(controller) + ": TurnOffIlluminator")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cIlluminator, turnOff))
 
 
 def turnOnAll(controller):
-    print str(controller) + ": TurnOnAll"
+    logging.info(str(controller) + ": TurnOnAll")
     turnOnHeater(controller)
     turnOnCooler(controller)
     turnOnHumidifier(controller)
@@ -427,7 +428,7 @@ def turnOnAll(controller):
 
 
 def turnOffAll(controller):
-    print str(controller) + ": TurnOffAll"
+    logging.info(str(controller) + ": TurnOffAll")
     turnOffHeater(controller)
     turnOffCooler(controller)
     turnOffHumidifier(controller)

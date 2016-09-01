@@ -39,7 +39,7 @@ def sendRadioMsg(addr, msg):
     radio.openWritingPipe(addr)
     radio.stopListening()
     if not (radio.write(msg)):
-        print 'Error send message'
+        logging.warning('Error send message: {}'.format(msg) )
     time.sleep(pause_between_send)
     radio.startListening()
 
@@ -49,7 +49,7 @@ def getPipeFromString(stringPipe):
 
 
 def listenRadio():
-    print 'Begin listening radio'
+    logging.info('Begin listening radio')
     while do_Radio:
         sensors.saveData(getRadioMsg())
-    print 'End listening radio'
+    logging.info('End listening radio')
