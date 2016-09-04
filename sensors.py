@@ -29,6 +29,7 @@ cCooler = 'cooler'
 cHumidifier = 'humidifier'
 cIlluminator = 'illuminator'
 cSprinkler = 'sprinkler'
+cSprinklerRelay = 'sprinklerRelay'
 
 cLowerBoundThreshold = 'lowerBoundThreshold'
 cUpperBoundThreshold = 'upperBoundThreshold'
@@ -63,14 +64,25 @@ def updateControllerThresholds():
 
 def updateThresholds(controller, filename):
     curHourInTable = time.localtime().tm_hour + 2
+    set_sprinkler_bool(controller, False)
     with open(filename, 'rb') as csvfile:
-        fileReader = csv.reader(csvfile)
+        fileReader = csv.reader(csvfile, delimiter=';')
         for row in fileReader:
-            m = re.split(r';', row[0])
-            relay = m[0]
-            lowerValue = int(m[curHourInTable]) - int(m[1])
-            upperValue = int(m[curHourInTable]) + int(m[1])
-            saveThreshold(controller, relay, lowerValue, upperValue)
+            relay = row[0]
+            if relay == cSprinklerRelay:
+                current_week_day = str(time.localtime().tm_wday)
+                m = re.search(current_week_day, str(row[curHourInTable]))
+                if m:
+                    set_sprinkler_bool(controller, True)
+
+            else:
+                lowerValue = int(row[curHourInTable]) - int(row[1])
+                upperValue = int(row[curHourInTable]) + int(row[1])
+                saveThreshold(controller, relay, lowerValue, upperValue)
+
+
+def set_sprinkler_bool(controller, local_bool_sprinkler):
+    storage[controller]['relays'][cSprinkler]['need_water'] = local_bool_sprinkler
 
 
 def saveThreshold(controller, relay, lowerValue, upperValue):
@@ -192,7 +204,13 @@ def checkControllerRelay(controller):
     checkCooler(controller)
     checkHumidifier(controller)
     checkIlluminator(controller)
+    checkSprinklerRelay(controller)
 
+def checkSprinklerRelay(controller):
+    if need_turn_on_sprinkler_relay(controller, cSprinkler):
+        turn_on_sprinkler_relay(controller)
+    if need_turn_off_sprinkler_relay(controller, cSprinkler):
+        turn_off_sprinkler_relay(controller)
 
 def checkHeater(controller):
     checkValueCrossingThreshold(controller, cAirTemperature, cHeater)
@@ -225,7 +243,6 @@ def checkIlluminator(controller):
     if needTurnOffIlluminator(controller, cIlluminator):
         turnOffIlluminator(controller)
 
-
 def checkValueCrossingThreshold(controller, sensor, relay):
     if 'value' in storage[controller]['sensors'][sensor]:
         if storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
@@ -246,6 +263,20 @@ def checkValueCrossingThreshold(controller, sensor, relay):
                 storage[controller]['relays'][relay]['cunningCounter'][cUpperBoundCounter] = 0
     else:
         logger.warning('Check value of sensor {}: There is no value of {}'.format(controller, sensor))
+
+
+def need_turn_on_sprinkler_relay(controller, relay):
+    if storage[controller]['relays'][relay]['need_water']:
+        return True
+    else:
+        return False
+
+
+def need_turn_off_sprinkler_relay(controller, relay):
+    if not storage[controller]['relays'][relay]['need_water']:
+        return True
+    else:
+        return False
 
 
 def needAutoTurnOffHeater(controller, relay):
@@ -369,11 +400,22 @@ def makeMsgForActionController(controller, relay, action):
         cHeater: 6,
         cCooler: 9,
         cHumidifier: 7,
-        cIlluminator: 10
+        cIlluminator: 10,
+        cSprinklerRelay: 11,
     }
     grafana.sendSensor(controller, relay, action)
     turnRelaySwitcher(controller, relay, action)
     return pack('hhh', controller, relayNum[relay], action)
+
+
+def turn_on_sprinkler_relay(controller):
+    logger.info(str(controller) + ": TurnOnSprinklerRelay")
+    radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cSprinklerRelay, turnOn))
+
+
+def turn_off_sprinkler_relay(controller):
+    logger.info(str(controller) + ": TurnOffSprinklerRelay")
+    radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cSprinklerRelay, turnOff))
 
 
 def turnOnHeater(controller):
