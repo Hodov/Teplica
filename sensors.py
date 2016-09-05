@@ -6,6 +6,7 @@ import settings
 import grafana
 import radio
 from log import logger
+from threading import Thread
 
 do_checkSensor = True
 
@@ -70,6 +71,7 @@ def updateThresholds(controller, filename):
         for row in fileReader:
             relay = row[0]
             if relay == cSprinklerRelay:
+                #TODO save Time
                 current_week_day = str(time.localtime().tm_wday)
                 m = re.search(current_week_day, str(row[curHourInTable]))
                 if m:
@@ -206,11 +208,13 @@ def checkControllerRelay(controller):
     checkIlluminator(controller)
     checkSprinklerRelay(controller)
 
+
 def checkSprinklerRelay(controller):
     if need_turn_on_sprinkler_relay(controller, cSprinkler):
         turn_on_sprinkler_relay(controller)
     if need_turn_off_sprinkler_relay(controller, cSprinkler):
         turn_off_sprinkler_relay(controller)
+
 
 def checkHeater(controller):
     checkValueCrossingThreshold(controller, cAirTemperature, cHeater)
@@ -242,6 +246,7 @@ def checkIlluminator(controller):
         turnOnIlluminator(controller)
     if needTurnOffIlluminator(controller, cIlluminator):
         turnOffIlluminator(controller)
+
 
 def checkValueCrossingThreshold(controller, sensor, relay):
     if 'value' in storage[controller]['sensors'][sensor]:
@@ -410,12 +415,15 @@ def makeMsgForActionController(controller, relay, action):
 
 def turn_on_sprinkler_relay(controller):
     logger.info(str(controller) + ": TurnOnSprinklerRelay")
-    radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cSprinklerRelay, turnOn))
+    radio.sendRadioMsg(storage[controller]['actionAddress'],
+                       makeMsgForActionController(controller, cSprinklerRelay, turnOn))
+    run_check_sprinkler(controller, cSoilHumidity, cSprinkler)
 
 
 def turn_off_sprinkler_relay(controller):
     logger.info(str(controller) + ": TurnOffSprinklerRelay")
-    radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cSprinklerRelay, turnOff))
+    radio.sendRadioMsg(storage[controller]['actionAddress'],
+                       makeMsgForActionController(controller, cSprinklerRelay, turnOff))
 
 
 def turnOnHeater(controller):
@@ -462,6 +470,17 @@ def turnOffIlluminator(controller):
                        makeMsgForActionController(controller, cIlluminator, turnOff))
 
 
+def turn_on_sprinkler(controller):
+    logger.info(str(controller) + ": TurnOnSprinkler")
+    radio.sendRadioMsg(storage[controller]['actionAddress'], makeMsgForActionController(controller, cSprinkler, turnOn))
+
+
+def turn_off_sprinkler(controller):
+    logger.info(str(controller) + ": TurnOffSprinkler")
+    radio.sendRadioMsg(storage[controller]['actionAddress'],
+                       makeMsgForActionController(controller, cSprinkler, turnOff))
+
+
 def turnOnAll(controller):
     logger.info(str(controller) + ": TurnOnAll")
     turnOnHeater(controller)
@@ -478,7 +497,6 @@ def turnOffAll(controller):
     turnOffIlluminator(controller)
 
 
-
 def initAllRelays():
     for each in storage:
         turnOffAll(each)
@@ -493,3 +511,57 @@ def checkRelay(controller, relay):
         checkHumidifier(controller)
     if relay == cIlluminator:
         checkIlluminator(controller)
+
+
+def run_check_sprinkler(controller, sensor, relay):
+    th = Thread(name=controller, target=check_sprinkler, args=(controller, sensor, relay))
+    th.start()
+    th.join()
+
+
+def need_turn_on_sprinkler(controller, sensor, relay):
+    if (need_auto_turn_on_sprinkler(controller, sensor, relay) and autoMode(controller, relay)) or relaySwitchOn(controller,
+                                                                                                        relay):
+        return True
+    else:
+        return False
+
+
+def need_turn_off_sprinkler(controller, sensor, relay):
+    if (need_auto_turn_off_sprinkler(controller, sensor, relay) and autoMode(controller, relay)) or relaySwitchOff(controller,
+                                                                                                      relay):
+        return True
+    else:
+        return False
+
+
+def need_auto_turn_on_sprinkler(controller, sensor, relay):
+    if storage[controller]['sensors'][sensor]['value'] is not None:
+        if storage[controller]['sensors'][sensor]['value'] < storage[controller]['relays'][relay][cUpperBoundThreshold]:
+            return True
+        else:
+            return False
+
+
+def need_auto_turn_off_sprinkler(controller, sensor, relay):
+    if storage[controller]['sensors'][sensor]['value'] is not None:
+        if (storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold] and
+            diffTime(controller)):
+            return True
+        else:
+            return False
+
+
+def check_sprinkler(controller, sensor, relay):
+    if need_turn_on_sprinkler(controller, sensor, relay):
+        turn_on_sprinkler(controller)
+        setStartTime(controller)
+    if need_turn_off_sprinkler(controller, sensor, relay):
+        turn_off_sprinkler(controller)
+
+def setStartTime():
+    #TODO: startTime
+
+def diffTime():
+    #TODO diffTime
+    return True
