@@ -1,5 +1,6 @@
 import csv
 import time
+from datetime import datetime, timedelta
 import re
 from struct import *
 import settings
@@ -71,11 +72,13 @@ def updateThresholds(controller, filename):
         for row in fileReader:
             relay = row[0]
             if relay == cSprinklerRelay:
-                #TODO save Time
-                current_week_day = str(time.localtime().tm_wday)
+                current_week_day = str(time.localtime().tm_wday+1)
                 m = re.search(current_week_day, str(row[curHourInTable]))
+                print current_week_day
+                print str(row[curHourInTable])
                 if m:
                     set_sprinkler_bool(controller, True)
+                    set_sprinkler_time(controller, row[1])
 
             else:
                 lowerValue = int(row[curHourInTable]) - int(row[1])
@@ -85,6 +88,10 @@ def updateThresholds(controller, filename):
 
 def set_sprinkler_bool(controller, local_bool_sprinkler):
     storage[controller]['relays'][cSprinkler]['need_water'] = local_bool_sprinkler
+
+
+def set_sprinkler_time(controller, time):
+    storage[controller]['relays'][cSprinkler]['time'] = timedelta(minutes=time)
 
 
 def saveThreshold(controller, relay, lowerValue, upperValue):
@@ -112,7 +119,8 @@ def initSensorCell(controller):
                 cCooler: {},
                 cHumidifier: {},
                 cIlluminator: {},
-                cSprinkler: {}
+                cSprinkler: {},
+                cSprinklerRelay: {}
             }
     }
     for each in storage[controller]['relays']:
@@ -520,16 +528,18 @@ def run_check_sprinkler(controller, sensor, relay):
 
 
 def need_turn_on_sprinkler(controller, sensor, relay):
-    if (need_auto_turn_on_sprinkler(controller, sensor, relay) and autoMode(controller, relay)) or relaySwitchOn(controller,
-                                                                                                        relay):
+    if (need_auto_turn_on_sprinkler(controller, sensor, relay) and autoMode(controller, relay)) or relaySwitchOn(
+            controller,
+            relay):
         return True
     else:
         return False
 
 
 def need_turn_off_sprinkler(controller, sensor, relay):
-    if (need_auto_turn_off_sprinkler(controller, sensor, relay) and autoMode(controller, relay)) or relaySwitchOff(controller,
-                                                                                                      relay):
+    if (need_auto_turn_off_sprinkler(controller, sensor, relay) and autoMode(controller, relay)) or relaySwitchOff(
+            controller,
+            relay):
         return True
     else:
         return False
@@ -545,8 +555,7 @@ def need_auto_turn_on_sprinkler(controller, sensor, relay):
 
 def need_auto_turn_off_sprinkler(controller, sensor, relay):
     if storage[controller]['sensors'][sensor]['value'] is not None:
-        if (storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold] and
-            diffTime(controller)):
+        if (storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold] and diffTime(controller)):
             return True
         else:
             return False
@@ -559,9 +568,14 @@ def check_sprinkler(controller, sensor, relay):
     if need_turn_off_sprinkler(controller, sensor, relay):
         turn_off_sprinkler(controller)
 
-def setStartTime():
-    #TODO: startTime
 
-def diffTime():
-    #TODO diffTime
-    return True
+def setStartTime(controller):
+    storage[controller]['relays'][cSprinkler]['start_time'] = datetime.now()
+
+
+def diffTime(controller):
+    if storage[controller]['relays'][cSprinkler]['start_time'] + storage[controller]['relays'][cSprinkler][
+        'time'] > datetime.now():
+        return True
+    else:
+        return False
