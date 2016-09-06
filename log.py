@@ -5,10 +5,16 @@ logger = logging.getLogger('main')
 
 
 def init():
+    print 'Log level'
     log_level = settings.get_log_level()
+    print log_level
+    print 'Formatter'
     formatter = logging.Formatter(u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s] %(message)s')
+    print 'ch'
     ch = logging.StreamHandler()
-    fh = logging.FileHandler(u'Logs/logfile.log')
+    print 'fh'
+    fh = logging.FileHandler(u'logfile.log')
+    print 'If'
     if log_level == 'debug':
         level = logging.DEBUG
     elif log_level == 'info':
@@ -19,6 +25,8 @@ def init():
         level = logging.ERROR
     else:
         level = logging.CRITICAL
+    print level
+    print 'logger'
     logger.setLevel(level)
     fh.setLevel(level)
     ch.setLevel(logging.ERROR)

@@ -90,8 +90,8 @@ def set_sprinkler_bool(controller, local_bool_sprinkler):
     storage[controller]['relays'][cSprinkler]['need_water'] = local_bool_sprinkler
 
 
-def set_sprinkler_time(controller, time):
-    storage[controller]['relays'][cSprinkler]['time'] = timedelta(minutes=time)
+def set_sprinkler_time(controller, time_delta):
+    storage[controller]['relays'][cSprinkler]['time'] = time_delta
 
 
 def saveThreshold(controller, relay, lowerValue, upperValue):
@@ -546,19 +546,23 @@ def need_turn_off_sprinkler(controller, sensor, relay):
 
 
 def need_auto_turn_on_sprinkler(controller, sensor, relay):
-    if storage[controller]['sensors'][sensor]['value'] is not None:
+    if (('value' in storage[controller]['sensors'][sensor]) and (storage[controller]['sensors'][sensor]['value'] is not None)):
         if storage[controller]['sensors'][sensor]['value'] < storage[controller]['relays'][relay][cUpperBoundThreshold]:
             return True
         else:
             return False
+    else:
+        return False
 
 
 def need_auto_turn_off_sprinkler(controller, sensor, relay):
-    if storage[controller]['sensors'][sensor]['value'] is not None:
+    if (('value' in storage[controller]['sensors'][sensor]) and (storage[controller]['sensors'][sensor]['value'] is not None)):
         if (storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold] and diffTime(controller)):
             return True
         else:
             return False
+    else:
+        return False
 
 
 def check_sprinkler(controller, sensor, relay):
@@ -574,8 +578,9 @@ def setStartTime(controller):
 
 
 def diffTime(controller):
-    if storage[controller]['relays'][cSprinkler]['start_time'] + storage[controller]['relays'][cSprinkler][
-        'time'] > datetime.now():
+    time_start = storage[controller]['relays'][cSprinkler]['start_time']
+    time_delta = timedelta(minutes=int(storage[controller]['relays'][cSprinkler]['time']))
+    if time_start + time_delta > datetime.now():
         return True
     else:
         return False

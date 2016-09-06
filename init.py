@@ -8,7 +8,9 @@ import log
 
 
 def initAll():
+    print 'Init'
     log.init()
+    print 'Init end'
     radio.initRadio(radio.getPipeFromString(settings.get_pipe()))
     sensors.initStorage()
     grafana.init()
