@@ -8,6 +8,7 @@ import grafana
 import radio
 from log import logger
 from threading import Thread
+import threading
 
 do_checkSensor = True
 
@@ -46,6 +47,8 @@ fileFolder = 'configs/'
 
 cunningCounterMaxValue = 4
 sleepPeriod = 10
+c_sleep_period_sprinkler = 1
+delta_sprinkler_time = 15
 
 
 def getFileName(controller):
@@ -415,6 +418,7 @@ def makeMsgForActionController(controller, relay, action):
         cHumidifier: 7,
         cIlluminator: 10,
         cSprinklerRelay: 11,
+        cSprinkler: 12
     }
     grafana.sendSensor(controller, relay, action)
     turnRelaySwitcher(controller, relay, action)
@@ -425,8 +429,21 @@ def turn_on_sprinkler_relay(controller):
     logger.info(str(controller) + ": TurnOnSprinklerRelay")
     radio.sendRadioMsg(storage[controller]['actionAddress'],
                        makeMsgForActionController(controller, cSprinklerRelay, turnOn))
-    run_check_sprinkler(controller, cSoilHumidity, cSprinkler)
+    if not bool_start_time_sprinkler_sensor(controller):
+        set_start_time_sprinkler_sensor(controller)
+        run_check_sprinkler(controller, cSoilHumidity, cSprinkler)
 
+
+
+def set_start_time_sprinkler_sensor(controller):
+    storage[controller]['relays'][cSprinklerRelay]['start_time'] = datetime.now()
+
+
+def bool_start_time_sprinkler_sensor(controller):
+    if ('start_time' in storage[controller]['relays'][cSprinklerRelay] and storage[controller]['relays'][cSprinklerRelay]['start_time'] is not None):
+        return True
+    else:
+        return False
 
 def turn_off_sprinkler_relay(controller):
     logger.info(str(controller) + ": TurnOffSprinklerRelay")
@@ -503,6 +520,8 @@ def turnOffAll(controller):
     turnOffCooler(controller)
     turnOffHumidifier(controller)
     turnOffIlluminator(controller)
+    turn_off_sprinkler_relay(controller)
+    turn_off_sprinkler(controller)
 
 
 def initAllRelays():
@@ -523,6 +542,7 @@ def checkRelay(controller, relay):
 
 def run_check_sprinkler(controller, sensor, relay):
     th = Thread(name=controller, target=check_sprinkler, args=(controller, sensor, relay))
+    print 'Launch thread ' + str(controller)
     th.start()
     th.join()
 
@@ -547,7 +567,7 @@ def need_turn_off_sprinkler(controller, sensor, relay):
 
 def need_auto_turn_on_sprinkler(controller, sensor, relay):
     if (('value' in storage[controller]['sensors'][sensor]) and (storage[controller]['sensors'][sensor]['value'] is not None)):
-        if storage[controller]['sensors'][sensor]['value'] < storage[controller]['relays'][relay][cUpperBoundThreshold]:
+        if storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold]:
             return True
         else:
             return False
@@ -556,9 +576,12 @@ def need_auto_turn_on_sprinkler(controller, sensor, relay):
 
 
 def need_auto_turn_off_sprinkler(controller, sensor, relay):
-    if (('value' in storage[controller]['sensors'][sensor]) and (storage[controller]['sensors'][sensor]['value'] is not None)):
-        if (storage[controller]['sensors'][sensor]['value'] > storage[controller]['relays'][relay][cUpperBoundThreshold] and diffTime(controller)):
-            return True
+    if 'start_time' in storage[controller]['relays'][cSprinkler]:
+        if (('value' in storage[controller]['sensors'][sensor]) and (storage[controller]['sensors'][sensor]['value'] is not None)):
+            if (storage[controller]['sensors'][sensor]['value'] < storage[controller]['relays'][relay][cLowerBoundThreshold] and diffTime(controller)):
+                return True
+            else:
+                return False
         else:
             return False
     else:
@@ -566,20 +589,36 @@ def need_auto_turn_off_sprinkler(controller, sensor, relay):
 
 
 def check_sprinkler(controller, sensor, relay):
-    if need_turn_on_sprinkler(controller, sensor, relay):
-        turn_on_sprinkler(controller)
-        setStartTime(controller)
-    if need_turn_off_sprinkler(controller, sensor, relay):
-        turn_off_sprinkler(controller)
+    while diff_sprinkler_watering_time(controller):
+        if need_turn_on_sprinkler(controller, sensor, relay):
+            turn_on_sprinkler(controller)
+            setStartTime(controller)
+        if need_turn_off_sprinkler(controller, sensor, relay):
+            turn_off_sprinkler(controller)
+            set_sprinkler_bool(controller, False)
+            turn_off_sprinkler_relay(controller)
+        time.sleep(c_sleep_period_sprinkler)
+    turn_off_sprinkler(controller)
+    turn_off_sprinkler_relay(controller)
+    set_sprinkler_bool(controller, False)
 
 
 def setStartTime(controller):
     storage[controller]['relays'][cSprinkler]['start_time'] = datetime.now()
 
+def diff_sprinkler_watering_time(controller):
+    time_start = storage[controller]['relays'][cSprinklerRelay]['start_time']
+    time_delta = timedelta(seconds=delta_sprinkler_time)
+    time_watering = timedelta(seconds=int(storage[controller]['relays'][cSprinkler]['time']))
+    if time_start + time_delta + time_watering > datetime.now():
+        return True
+    else:
+        return False
+
 
 def diffTime(controller):
     time_start = storage[controller]['relays'][cSprinkler]['start_time']
-    time_delta = timedelta(minutes=int(storage[controller]['relays'][cSprinkler]['time']))
+    time_delta = timedelta(seconds=int(storage[controller]['relays'][cSprinkler]['time']))
     if time_start + time_delta > datetime.now():
         return True
     else:

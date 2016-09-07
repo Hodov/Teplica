@@ -10,7 +10,10 @@ def getSettingsData():
 
 def getControllers():
     keys = getSettingsData()['controllers'].keys()
-    new_keys = [int(i) for i in keys]
+    new_keys = []
+    for a in keys:
+        if getSettingsData()['controllers'][a]['status'] == 'active':
+            new_keys.append(int(a))
     return new_keys
 
 
