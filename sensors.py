@@ -417,8 +417,8 @@ def makeMsgForActionController(controller, relay, action):
         cCooler: 9,
         cHumidifier: 7,
         cIlluminator: 10,
-        cSprinklerRelay: 11,
-        cSprinkler: 12
+        cSprinklerRelay: 9,
+        cSprinkler: 8
     }
     grafana.sendSensor(controller, relay, action)
     turnRelaySwitcher(controller, relay, action)
