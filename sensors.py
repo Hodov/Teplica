@@ -178,8 +178,8 @@ def byteArrayToStr(receivedMessage):
 
 def checkAllRelays():
     logger.info('Begin check all relays')
-    updateControllerThresholds()
     while do_checkSensor:
+        updateControllerThresholds()
         time.sleep(sleepPeriod)
         for controller in storage:
             checkControllerRelay(controller)
