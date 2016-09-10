@@ -19,6 +19,7 @@ if __name__ == "__main__":
         th1.join()
         th2.join()
         th3.join()
+        sensors.initAllRelays()
         logger.info('Exit main thread')
     except Exception as e:
         logger.exception(e)

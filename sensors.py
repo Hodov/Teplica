@@ -72,13 +72,12 @@ def updateThresholds(controller, filename):
     set_sprinkler_bool(controller, False)
     with open(filename, 'rb') as csvfile:
         fileReader = csv.reader(csvfile, delimiter=';')
+        logger.debug('Open setting file')
         for row in fileReader:
             relay = row[0]
             if relay == cSprinklerRelay:
                 current_week_day = str(time.localtime().tm_wday+1)
                 m = re.search(current_week_day, str(row[curHourInTable]))
-                print current_week_day
-                print str(row[curHourInTable])
                 if m:
                     set_sprinkler_bool(controller, True)
                     set_sprinkler_time(controller, row[1])
@@ -417,7 +416,7 @@ def makeMsgForActionController(controller, relay, action):
         cCooler: 9,
         cHumidifier: 7,
         cIlluminator: 10,
-        cSprinklerRelay: 9,
+        cSprinklerRelay: 11,
         cSprinkler: 8
     }
     grafana.sendSensor(controller, relay, action)
@@ -437,6 +436,10 @@ def turn_on_sprinkler_relay(controller):
 
 def set_start_time_sprinkler_sensor(controller):
     storage[controller]['relays'][cSprinklerRelay]['start_time'] = datetime.now()
+
+def set_null_start_time_sprinkler(controller):
+    storage[controller]['relays'][cSprinklerRelay]['start_time'] = None
+    storage[controller]['relays'][cSprinkler]['start_time'] = None
 
 
 def bool_start_time_sprinkler_sensor(controller):
@@ -542,7 +545,7 @@ def checkRelay(controller, relay):
 
 def run_check_sprinkler(controller, sensor, relay):
     th = Thread(name=controller, target=check_sprinkler, args=(controller, sensor, relay))
-    print 'Launch thread ' + str(controller)
+    logger.debug('Launch thread ' + str(controller))
     th.start()
     th.join()
 
@@ -592,15 +595,18 @@ def check_sprinkler(controller, sensor, relay):
     while diff_sprinkler_watering_time(controller):
         if need_turn_on_sprinkler(controller, sensor, relay):
             turn_on_sprinkler(controller)
-            setStartTime(controller)
+            if is_watering_time(controller):
+                setStartTime(controller)
         if need_turn_off_sprinkler(controller, sensor, relay):
             turn_off_sprinkler(controller)
             set_sprinkler_bool(controller, False)
             turn_off_sprinkler_relay(controller)
         time.sleep(c_sleep_period_sprinkler)
+    logger.debug('Controller {}: Timeout watering'.format(controller))
     turn_off_sprinkler(controller)
     turn_off_sprinkler_relay(controller)
     set_sprinkler_bool(controller, False)
+    set_null_start_time_sprinkler(controller)
 
 
 def setStartTime(controller):
@@ -620,6 +626,12 @@ def diffTime(controller):
     time_start = storage[controller]['relays'][cSprinkler]['start_time']
     time_delta = timedelta(seconds=int(storage[controller]['relays'][cSprinkler]['time']))
     if time_start + time_delta > datetime.now():
+        return True
+    else:
+        return False
+
+def is_watering_time(controller):
+    if ('start_time' in storage[controller]['relays'][cSprinkler] and storage[controller]['relays'][cSprinkler]['start_time'] is not None):
         return True
     else:
         return False
