@@ -49,6 +49,9 @@ cunningCounterMaxValue = 4
 sleepPeriod = 10
 c_sleep_period_sprinkler = 1
 delta_sprinkler_time = 15
+#best time 180
+time_before_watering = 180
+time_after_watering = 180
 
 
 def getFileName(controller):
@@ -180,9 +183,10 @@ def checkAllRelays():
     logger.info('Begin check all relays')
     while do_checkSensor:
         updateControllerThresholds()
-        time.sleep(sleepPeriod)
+        logger.debug('Check relays')
         for controller in storage:
             checkControllerRelay(controller)
+        time.sleep(sleepPeriod)
     logger.info('End check all relays')
 
 
@@ -546,8 +550,9 @@ def checkRelay(controller, relay):
 def run_check_sprinkler(controller, sensor, relay):
     th = Thread(name=controller, target=check_sprinkler, args=(controller, sensor, relay))
     logger.debug('Launch thread ' + str(controller))
+    th.daemon = True
     th.start()
-    th.join()
+    #th.join()
 
 
 def need_turn_on_sprinkler(controller, sensor, relay):
@@ -592,6 +597,7 @@ def need_auto_turn_off_sprinkler(controller, sensor, relay):
 
 
 def check_sprinkler(controller, sensor, relay):
+    time.sleep(time_before_watering)
     while diff_sprinkler_watering_time(controller):
         if need_turn_on_sprinkler(controller, sensor, relay):
             turn_on_sprinkler(controller)
@@ -600,13 +606,15 @@ def check_sprinkler(controller, sensor, relay):
         if need_turn_off_sprinkler(controller, sensor, relay):
             turn_off_sprinkler(controller)
             set_sprinkler_bool(controller, False)
-            turn_off_sprinkler_relay(controller)
+            #turn_off_sprinkler_relay(controller)
         time.sleep(c_sleep_period_sprinkler)
     logger.debug('Controller {}: Timeout watering'.format(controller))
     turn_off_sprinkler(controller)
-    turn_off_sprinkler_relay(controller)
     set_sprinkler_bool(controller, False)
     set_null_start_time_sprinkler(controller)
+    time.sleep(time_before_watering)
+    turn_off_sprinkler_relay(controller)
+
 
 
 def setStartTime(controller):
@@ -616,7 +624,8 @@ def diff_sprinkler_watering_time(controller):
     time_start = storage[controller]['relays'][cSprinklerRelay]['start_time']
     time_delta = timedelta(seconds=delta_sprinkler_time)
     time_watering = timedelta(seconds=int(storage[controller]['relays'][cSprinkler]['time']))
-    if time_start + time_delta + time_watering > datetime.now():
+    time_before = timedelta(seconds=time_before_watering)
+    if time_start + time_delta + time_watering + time_before > datetime.now():
         return True
     else:
         return False

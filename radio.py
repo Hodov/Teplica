@@ -8,7 +8,8 @@ from struct import *
 
 radio = NRF24(GPIO, spidev.SpiDev())
 do_Radio = True
-pause_between_send = 0.1
+pause_between_send = 0.2
+pause_between_get = 0.2
 
 
 def initRadio(radioAddress):
@@ -29,7 +30,7 @@ def initRadio(radioAddress):
 
 def getRadioMsg():
     while not radio.available(0):
-        time.sleep(1 / 10)
+        time.sleep(pause_between_get)
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
     logger.debug(receivedMessage)
@@ -40,7 +41,7 @@ def sendRadioMsg(addr, msg):
     radio.openWritingPipe(addr)
     radio.stopListening()
     if not (radio.write(msg)):
-        str =  unpack('hhh', msg)
+        str = unpack('hhh', msg)
         logger.warning('Error send message: {}'.format(str))
     time.sleep(pause_between_send)
     radio.startListening()
