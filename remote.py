@@ -36,5 +36,12 @@ def getStorage():
 
 def parseAndroidCommand(command):
     # {u'position': u'auto', u'controller': u'20000', u'relay': u'heater'}
+
     sensors.setRelayMode(int(command['controller']), command['relay'], command['position'])
     sensors.checkRelay(int(command['controller']), command['relay'])
+    if (command['relay'] == sensors.cSprinkler and command['position'] == 'off' or command['relay'] == sensors.cSprinkler and command['position'] == 'auto'):
+        sensors.turn_off_sprinkler(int(command['controller']))
+    if (command['relay'] == sensors.cSprinkler and command['position'] == 'on'):
+        sensors.turn_on_sprinkler(int(command['controller']))
+
+
